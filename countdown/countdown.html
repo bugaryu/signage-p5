@@ -50,11 +50,11 @@
             for (let i = 0; i < daysLeft; i++) {
                 let colorChoice;
                 const rand = random(1);
-                if (rand < 0.85) {
-                    // 85%
+                if (rand < 0.90) {
+                    // 90%
                     colorChoice = random(themeColors);
                 } else {
-                    // 15%
+                    // 10%
                     const gray = random(100, 180);
                     colorChoice = [gray, gray, gray];
                 }
@@ -62,9 +62,9 @@
                 bubbles.push({
                     x: random(width),
                     y: random(height),
-                    r: random(20, 200),
-                    vx: random(-0.3, 0.3),
-                    vy: random(-0.3, 0.3),
+                    r: random(30, 300),
+                    vx: random(-0.5, 0.5),
+                    vy: random(-0.5, 0.5),
                     alpha: random(100, 250),
                     color: colorChoice
                 });
@@ -110,6 +110,10 @@
             const yyyy = now.getFullYear();
             const MM = String(now.getMonth() + 1).padStart(2, "0");
             const dd = String(now.getDate()).padStart(2, "0");
+            
+            // 曜日を英語短縮形で取得
+            const dayNames = ["Sun.", "Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat."];
+            const dayName = dayNames[now.getDay()];
 
             const baseSize = min(width, height);
             const cx = width / 2;
@@ -141,32 +145,32 @@
 
             // 
             textSize(baseSize * 0.05);
-            text(`${yyyy}/${MM}/${dd}`, cx, baseSize * 0.24);
+            text(`${yyyy}/${MM}/${dd} ${dayName}`, cx, baseSize * 0.24);
 
             // 
             textSize(baseSize * 0.05);
-            text("MoN Takanawa:", cx, height / 2 - baseSize * 0.18);
-            text("The Museum of Narratives", cx, height / 2 - baseSize * 0.12);
-            text("開館まで", cx, height / 2 - baseSize * 0.04);
+            text("MoN Takanawa:", cx, height / 2 - baseSize * 0.35);
+            text("The Museum of Narratives", cx, height / 2 - baseSize * 0.29);
+            text("開館まで", cx, height / 2 - baseSize * 0.20);
             // text("Opening in", cx, height / 2 - baseSize * 0.04);
 
             // 
             textSize(baseSize * 0.22);
-            text(`${daysLeft}`, cx, height / 2 + baseSize * 0.12);
+            text(`${daysLeft}`, cx, height / 2);
 
             // 
             textSize(baseSize * 0.08);
-            text(`日`, cx + 150, height / 2 + baseSize * 0.12);
-            // text(`days`, cx+150, height / 2 + baseSize * 0.12);
-
+            // text(`日`, cx + baseSize * 0.25, height / 2);
+            text(`days`, cx + baseSize * 0.30, height / 2);
+            
             // 
             textSize(baseSize * 0.12);
-            text(`${weeksLeft}`, cx, height / 2 + baseSize * 0.30);
+            text(`${weeksLeft}`, cx, height / 2 + baseSize * 0.20);
 
             // 
             textSize(baseSize * 0.06);
-            text(`週`, cx + 150, height / 2 + baseSize * 0.30);
-            // text(`weeks`, cx+150, height / 2 + baseSize * 0.30);
+            // text(`週`, cx + baseSize * 0.25, height / 2 + baseSize * 0.20);
+            text(`weeks`, cx + baseSize * 0.30, height / 2 + baseSize * 0.20);
         }
     </script>
 </body>

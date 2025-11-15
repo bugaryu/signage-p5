@@ -50,9 +50,13 @@
             const yyyy = now.getFullYear();
             const MM = String(now.getMonth() + 1).padStart(2, "0");
             const dd = String(now.getDate()).padStart(2, "0");
+            
+            // 曜日を英語短縮形で取得
+            const dayNames = ["Sun.", "Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat."];
+            const dayName = dayNames[now.getDay()];
 
             document.getElementById('time').textContent = `${h}:${m}:${s}`;
-            document.getElementById('date').textContent = `${yyyy}/${MM}/${dd}`;
+            document.getElementById('date').textContent = `${yyyy}/${MM}/${dd} ${dayName}`;
 
             // switchHour:switchMinute になったらcountdown.htmlにリダイレクト
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
