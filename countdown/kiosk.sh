@@ -3,4 +3,4 @@ chromium \
   --noerrdialogs \
   --disable-infobars \
   --incognito \
-  "file:///home/montech/workspace/signage/countdown/time.html"
+  "file://$HOME/workspace/signage/countdown/time.html"
