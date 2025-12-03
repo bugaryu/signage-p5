@@ -100,12 +100,12 @@
         // Schedule Configuration
         // ====================================
         const SCHEDULE = [
-            { hour: 9, minute: 0, view: 'time' },
-            { hour: 10, minute: 0, view: 'time_quotes' },
-            { hour: 12, minute: 0, view: 'countdown' },
-            { hour: 12, minute: 30, view: 'time_quotes' },
-            { hour: 13, minute: 0, view: 'time' },
-            { hour: 13, minute: 30, view: 'time_quotes' },
+            { hour: 9, minute: 0, second: 0, view: 'time' },
+            { hour: 10, minute: 0, second: 0, view: 'time_quotes' },
+            { hour: 12, minute: 0, second: 0, view: 'countdown' },
+            { hour: 12, minute: 30, second: 0, view: 'time_quotes' },
+            { hour: 13, minute: 0, second: 0, view: 'time' },
+            { hour: 13, minute: 30, second: 0, view: 'time_quotes' },
         ]
 
         // ====================================
@@ -114,7 +114,7 @@
         class DisplayManager {
             constructor() {
                 this.currentView = null;
-                this.lastCheckMinute = -1;
+                this.lastCheckSecond = -1;
                 this.debugMode = false; // URLパラメータで ?debug=1 で有効化
             }
 
@@ -156,12 +156,12 @@
 
             getCurrentView() {
                 const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
                 let activeView = SCHEDULE[0].view;
 
                 for (let s of SCHEDULE) {
-                    const scheduleMinutes = s.hour * 60 + s.minute;
-                    if (currentMinutes >= scheduleMinutes) {
+                    const scheduleSeconds = s.hour * 3600 + s.minute * 60 + (s.second || 0);
+                    if (currentSeconds >= scheduleSeconds) {
                         activeView = s.view;
                     }
                 }
@@ -170,14 +170,15 @@
 
             getNextSwitchTime() {
                 const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
                 for (let s of SCHEDULE) {
-                    const scheduleMinutes = s.hour * 60 + s.minute;
-                    if (scheduleMinutes > currentMinutes) {
+                    const scheduleSeconds = s.hour * 3600 + s.minute * 60 + (s.second || 0);
+                    if (scheduleSeconds > currentSeconds) {
                         return {
                             hour: s.hour,
-                            minute: s.minute
+                            minute: s.minute,
+                            second: s.second || 0
                         };
                     }
                 }
@@ -187,6 +188,7 @@
                 return {
                     hour: nextSchedule.hour,
                     minute: nextSchedule.minute,
+                    second: nextSchedule.second || 0,
                     nextDay: true
                 };
             }
@@ -194,15 +196,15 @@
             startTimeMonitor() {
                 setInterval(() => {
                     const now = new Date();
-                    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                    const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-                    if (this.lastCheckMinute !== currentMinutes) {
-                        this.lastCheckMinute = currentMinutes;
+                    if (this.lastCheckSecond !== currentSeconds) {
+                        this.lastCheckSecond = currentSeconds;
                         this.loadView();
                     }
 
                     this.updateStatus();
-                }, 1000);
+                }, 100); // 100ms間隔で監視（秒単位の変更を素早く検出）
             }
 
             updateStatus() {
@@ -228,7 +230,8 @@
                 const next = this.getNextSwitchTime();
                 const nextHour = String(next.hour).padStart(2, '0');
                 const nextMinute = String(next.minute).padStart(2, '0');
-                document.getElementById('next-switch').textContent = `${nextHour}:${nextMinute}${next.nextDay ? ' (明日)' : ''}`;
+                const nextSecond = String(next.second).padStart(2, '0');
+                document.getElementById('next-switch').textContent = `${nextHour}:${nextMinute}:${nextSecond}${next.nextDay ? ' (明日)' : ''}`;
             }
         }
 

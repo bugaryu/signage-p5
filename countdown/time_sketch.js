@@ -123,7 +123,7 @@ function draw() {
         fill(255, quoteAlpha);
         textSize(18);
         textLeading(30);
-        text(todayQuote.text, padding, quoteBoxY, boxWidth, boxHeight);
+        text(todayQuote.text, padding, quoteBoxY - boxHeight * 0.1, boxWidth, boxHeight);
 
         // 著者
         textSize(12);
