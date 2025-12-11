@@ -1,92 +1,119 @@
 // ================================
 // 設定
 // ================================
-let images = [];
-// let imageUrls = [];
+let images = [];          // 実体画像
+// imageUrls は別ファイルで定義されている前提
 
 let currentIndex = 0;
-let nextIndex = 1;
+let nextIndex = 0;
 
-let slideDuration = 10000;   // 1枚の表示時間（フェード前）6秒
-let fadeDuration = 2000;   // フェード時間 2秒
+let slideDuration = 10000;   // 1枚の表示時間
+let fadeDuration = 2000;    // フェード時間
 
-let slideStart = 0;      // 現在のスライドが始まった時間
-let transitionStart = 0;    // フェードが始まった時間
+let slideStart = 0;          // 現在スライド開始時刻
+let transitionStart = 0;     // フェード開始時刻
 let inTransition = false;
 
-let loadedFlags = [];   // 各画像のロード状態
-let loadedCount = 0;
+// 画像ロード管理
+const MAX_PARALLEL_LOADS = 3;   // 同時Ïロード数上限
+let imageState = [];            // "not_started" | "loading" | "loaded" | "failed"
+let loadedIndices = [];         // 読み込み済みインデックス一覧
 
-function preload() {
-    console.log("imageUrls.length: " + imageUrls.length);
-    for (let i = 0; i < imageUrls.length; i++) {
-        loadedFlags[i] = false;
-        images[i] = null;
-    }
-    // ★ 最初の1枚だけ確実に読み込む（開始時に黒画面にならないように）
-    images[0] = loadImage(
-        imageUrls[0], (img) => {
-            images[0] = img;
-            loadedFlags[0] = true;
-            loadedCount++;
-            console.log("loaded", 0, imageUrls[0]);
-        },
-        (err) => {
-            console.error("failed to load", imageUrls[0], err);
-            loadedFlags[0] = false;
-        }
-    );
-    console.log("started loading 0 " + imageUrls[0]);
-    // for (let url of imageUrls) {
-    //     images.push(loadImage(url));
-    // }
-}
-
-function loadAnotherImage() {
-    // console.log("loadImage called, loadedCount: " + loadedCount);
-    for (let i = 1; i < imageUrls.length; i++) {
-        // すでに読み込み開始してたらスキップ
-        if (images[i]) {
-            // console.log("already loading", i, imageUrls[i]);
-            continue
-        }
-
-        loadImage(
-            imageUrls[i],
-            (img) => {
-                images[i] = img;
-                loadedFlags[i] = true;
-                loadedCount++;
-                console.log("loaded", i, imageUrls[i]);
-            },
-            (err) => {
-                console.error("failed to load", imageUrls[i], err);
-                loadedFlags[i] = false;
-            }
-        );
-        // console.log("started loading", i, imageUrls[i]);
-        break; // 1回に1枚だけ読み込む
-    }
-}
-
-// ===== フェードアニメーション用の変数 =====
+// ===== 名言用 =====
 let thanksText = null;
 let quoteAlpha = 0; // 名言の透明度
-let fadingIn = true; // フェードイン中か
-let lastQuoteTime = 0; // 最後に名言が表示された時刻
-const quoteDisplayDuration = 30000; // 表示時間（ミリ秒）：30秒
-const quoteFadeDuration = 2000; // フェードイン/アウト時間（ミリ秒）
-let textBaseSize = 0; // 基本テキストサイズ
+let fadingIn = true;
+let lastQuoteTime = 0;
+const quoteDisplayDuration = 30000; // 30秒
+const quoteFadeDuration = 2000;
+let textBaseSize = 0;
 
-// const DEBUG = false;
-const DEBUG = new URLSearchParams(window.location.search).has('debug');
-console.log('[Quotes Sketch] Debug mode:', DEBUG);
+const DEBUG = new URLSearchParams(window.location.search).has("debug");
+console.log("[Quotes Sketch] Debug mode:", DEBUG);
 
+// ================================
+// 画像ロードまわり
+// ================================
+function initImageState() {
+    console.log("imageUrls.length:", imageUrls.length);
+    imageState = new Array(imageUrls.length).fill("not_started");
+    images = new Array(imageUrls.length).fill(null);
+    loadedIndices = [];
+}
+
+// index番目のロード開始（既に済なら何もしない）
+function startImageLoad(index) {
+    if (!imageUrls[index]) return;
+    if (imageState[index] === "loading" || imageState[index] === "loaded") return;
+
+    imageState[index] = "loading";
+
+    loadImage(
+        imageUrls[index],
+        (img) => {
+            images[index] = img;
+            imageState[index] = "loaded";
+            loadedIndices.push(index);
+            console.log("loaded", index, imageUrls[index]);
+        },
+        (err) => {
+            imageState[index] = "failed";
+            console.error("failed to load", imageUrls[index], err);
+        }
+    );
+}
+
+// MAX_PARALLEL_LOADS を超えないように、裏で順次プリロード
+function preloadImagesInBackground() {
+    const activeLoads = imageState.filter((s) => s === "loading").length;
+    let slots = MAX_PARALLEL_LOADS - activeLoads;
+    if (slots <= 0) return;
+
+    for (let i = 0; i < imageUrls.length && slots > 0; i++) {
+        if (imageState[i] === "not_started") {
+            startImageLoad(i);
+            slots--;
+        }
+    }
+}
+
+// 最初の1枚だけ確実に読み込んでからスタート（黒画面防止）
+function preload() {
+    initImageState();
+    if (imageUrls.length > 0) {
+        startImageLoad(0);
+    }
+}
+
+// 読み込み済みの中から、currentIndex とは違うランダムなインデックスを返す
+function chooseRandomLoadedIndex(excludeIndex) {
+    if (loadedIndices.length === 0) return excludeIndex;
+
+    const candidates = loadedIndices.filter((i) => i !== excludeIndex);
+    if (candidates.length === 0) return excludeIndex;
+
+    const idx = floor(random(candidates.length));
+    return candidates[idx];
+}
+
+// 最初に読み込み済みのインデックスを返す（なければ0）
+function findFirstLoadedIndex() {
+    if (loadedIndices.length === 0) return 0;
+    return loadedIndices[0];
+}
+
+// ================================
+// 名言まわり
+// ================================
 function pickText() {
-    // appreciatesDataは外部ファイル(thanks.js)から読み込まれる
-    if (typeof appreciatesData === 'undefined') {
-        console.error('appreciatesData is not loaded. Make sure appreciates.js is included before thanks.js');
-        thanksText = { text: "引用句が読み込まれていません", author: "システムメッセージ" };
+    if (typeof appreciatesData === "undefined") {
+        console.error(
+            "appreciatesData is not loaded. Make sure appreciates.js is included before thanks.js"
+        );
+        thanksText = {
+            text: "引用句が読み込まれていません",
+            author: "システムメッセージ",
+        };
         return;
     }
 
@@ -95,70 +122,32 @@ function pickText() {
     const m = now.getMonth() + 1;
     const d = now.getDate();
 
-    // 日付ベースのシード値で、毎日同じ名言が表示される
-    //   const seed = y * 10000 + m * 100 + d;
-    // const seed = int(random(0, now.getMinutes() * 60 + now.getSeconds())); // テスト用に毎秒変わるシード 
+    // 完全ランダム選択（「毎回変わる」でOKそうだったのでこちら）
     const seed = random(appreciatesData.length);
-    // const index = seed % appreciatesData.length;
-
     const index = int(seed);
     console.log("appreciate index:", index, seed);
 
     thanksText = appreciatesData[index];
 
     if (DEBUG) {
-        console.log('[Quote Debug]', {
-            date: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+        console.log("[Quote Debug]", {
+            date: `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
             seed: seed,
             quoteIndex: index,
             totalQuotes: appreciatesData.length,
-            selectedQuote: thanksText
+            selectedQuote: thanksText,
         });
     }
-}
-
-function setup() {
-    // ★縦サイネージ想定：必要に応じて解像度変更
-    // createCanvas(1080, 1920);
-    console.log(windowWidth, windowHeight);
-    textFont("Noto Sans JP");
-    createCanvas(windowWidth, windowHeight);
-    imageMode(CENTER);
-    textAlign(CENTER, CENTER);
-    textWrap(CHAR); // テキスト折り返しを有効化
-    textBaseSize = width * 0.04; // 基本テキストサイズ
-    frameRate(5);
-
-    // textSize(64);
-    // fill(255);
-    // stroke(0);
-    // strokeWeight(6);
-
-    slideStart = millis();
-    // ================================
-    if (DEBUG) {
-        console.log('[Setup] Canvas size:', windowWidth, 'x', windowHeight);
-    }
-
-    // 今日の言葉を決める
-    pickText();
-    lastQuoteTime = millis();
-    quoteAlpha = 0;
-    slideAlpha = 0;
-    fadingIn = true;
-
-    // preload();
 }
 
 function updateQuoteAlpha() {
     const elapsedTime = millis() - lastQuoteTime;
 
-    // フェードイン処理（最初のfadeDuration時間）
     if (elapsedTime < quoteFadeDuration && fadingIn) {
+        // フェードイン
         quoteAlpha = map(elapsedTime, 0, quoteFadeDuration, 0, 255);
-    }
-    // 表示時間経過後、フェードアウト開始
-    else if (elapsedTime > quoteDisplayDuration - quoteFadeDuration) {
+    } else if (elapsedTime > quoteDisplayDuration - quoteFadeDuration) {
+        // フェードアウト
         const fadeOutProgress = map(
             elapsedTime,
             quoteDisplayDuration - quoteFadeDuration,
@@ -167,78 +156,127 @@ function updateQuoteAlpha() {
             0
         );
         quoteAlpha = fadeOutProgress;
-    }
-    // 完全表示期間
-    else {
+    } else {
+        // フル表示
         quoteAlpha = 255;
     }
 
-    // 表示時間を超えたら、新しい名言に切り替え
+    // 表示時間を超えたら次のテキストへ
     if (elapsedTime > quoteDisplayDuration) {
-        pickText(); // 同じ日なら同じ名言が選ばれる
+        pickText();
         lastQuoteTime = millis();
         quoteAlpha = 0;
         fadingIn = true;
     }
 }
 
+// ================================
+// p5 setup/draw
+// ================================
+function setup() {
+    console.log(windowWidth, windowHeight);
+    createCanvas(windowWidth, windowHeight);
+    imageMode(CENTER);
+    textAlign(CENTER, CENTER);
+    textWrap(CHAR);
+    textFont("Noto Sans JP");
+    textBaseSize = width * 0.04;
+    frameRate(30); // 描画は30fps, 負荷が高ければ下げてもOK
+
+    slideStart = millis();
+
+    if (DEBUG) {
+        console.log("[Setup] Canvas size:", windowWidth, "x", windowHeight);
+    }
+
+    pickText();
+    lastQuoteTime = millis();
+    quoteAlpha = 0;
+    fadingIn = true;
+
+    // currentIndex 初期化（既に読み込み済みの画像から）
+    currentIndex = findFirstLoadedIndex();
+    nextIndex = currentIndex;
+}
+
 function draw() {
     background(0);
 
-    if (loadedCount === 0) {
-        // 何も読み込めてない間の一時画面
+    // 裏で画像をどんどんロードする
+    preloadImagesInBackground();
+
+    if (loadedIndices.length === 0 || !images[currentIndex]) {
+        // まだ何も読めてないとき
         fill(255);
-        textAlign(CENTER, CENTER);
         textSize(24);
         text("Loading photos...", width / 2, height / 2);
         return;
     }
 
-    let now = millis();
+    const now = millis();
 
-    // 今の currentIndex がまだ読み込まれてなかったら、
-    // 一番最初に読み込めているインデックスに飛ぶ
+    // currentIndex が未ロードになったら、最初のロード済み画像にフォールバック
     if (!images[currentIndex]) {
         currentIndex = findFirstLoadedIndex();
     }
 
-    // スライド切替判定
+    // スライド切替判定（次のインデックスは必ず loaded なものからランダム）
     if (!inTransition && now - slideStart > slideDuration) {
-        inTransition = true;
-        transitionStart = now;
-        nextIndex = (currentIndex + 1) % images.length;
+        const candidate = chooseRandomLoadedIndex(currentIndex);
+        if (candidate !== currentIndex) {
+            inTransition = true;
+            transitionStart = now;
+            nextIndex = candidate;
+        } else {
+            // まだ1枚しか読み込めていないなどの場合はそのまま維持
+            slideStart = now;
+        }
     }
 
     if (!inTransition) {
-        // フェード前：現在の画像だけ
-        let progress = constrain((now - slideStart) / (slideDuration + fadeDuration), 0, 1);
+        // フェード前：現在の画像のみ
+        const progress = constrain(
+            (now - slideStart) / (slideDuration + fadeDuration),
+            0,
+            1
+        );
         drawKenBurns(images[currentIndex], progress, 255);
     } else {
         // フェード中：2枚をクロスフェード
-        let f = constrain((now - transitionStart) / fadeDuration, 0, 1);
+        const f = constrain((now - transitionStart) / fadeDuration, 0, 1);
 
-        let currentProgress = constrain((now - slideStart) / (slideDuration + fadeDuration), 0, 1);
-        let nextProgress = constrain((now - transitionStart) / (slideDuration + fadeDuration), 0, 1);
+        const currentProgress = constrain(
+            (now - slideStart) / (slideDuration + fadeDuration),
+            0,
+            1
+        );
+        const nextProgress = constrain(
+            (now - transitionStart) / (slideDuration + fadeDuration),
+            0,
+            1
+        );
 
-        // 既存スライド（フェードアウト）
         drawKenBurns(images[currentIndex], currentProgress, 255 * (1 - f));
-        // 次スライド（フェードイン）
         drawKenBurns(images[nextIndex], nextProgress, 255 * f);
 
-        // フェード終了処理
         if (f >= 1.0) {
             currentIndex = nextIndex;
-            // slideStart = now;
-            slideStart = now - fadeDuration; // ← フェード中に進んだ分を引いてあげる
+            slideStart = now - fadeDuration; // ズーム進行度を連続させる
             inTransition = false;
         }
     }
 
-    // 上部テキスト（時間帯でメッセージ変更）
-    drawTimeBasedMessage();
+    // ===== テキスト用背景オーバーレイ（視認性アップ）=====
+    // if (quoteAlpha > 0) {
+    //     push();
+    //     noStroke();
+    //     fill(0, map(quoteAlpha, 0, 255, 0, 180));
+    //     rect(0, 0, width, height);
+    //     pop();
+    // }
 
-    // ★ 残りの画像を裏で読み込む
-    loadAnotherImage();
+    // テキスト描画
+    drawTimeBasedMessage();
 }
 
 // ================================
@@ -247,133 +285,93 @@ function draw() {
 function drawKenBurns(img, progress, alpha) {
     if (!img) return;
 
-    // 画像を縦サイネージいっぱいにフィットさせるための基準サイズ
-    let aspectCanvas = height / width;
-    let aspectImg = img.height / img.width;
+    const aspectCanvas = height / width;
+    const aspectImg = img.height / img.width;
     if (frameCount === 1 && DEBUG) {
-        console.log('[Ken Burns] Canvas Aspect:', aspectCanvas, 'Image Aspect:', aspectImg);
+        console.log("[Ken Burns] Canvas Aspect:", aspectCanvas, "Image Aspect:", aspectImg);
     }
 
     let baseW, baseH;
     if (aspectImg < aspectCanvas) {
-        // 画像が横長 → 高さ基準
+        // 横長 → 高さ基準
         baseH = height;
         baseW = img.width * (height / img.height);
     } else {
-        // 画像が縦長 → 幅基準
+        // 縦長 → 幅基準
         baseW = width;
         baseH = img.height * (width / img.width);
     }
 
-    // progress(0→1)に応じて最大7%くらいズームイン
-    // let scale = 1.0 + 0.07 * progress;
-    let scale = 1.0 + 0.07 * progress;
+    const scale = 1.0 + 0.07 * progress;
 
     push();
-    tint(255, alpha); // フェード用アルファ
-    image(
-        img,
-        width / 2,
-        height / 2,
-        baseW * scale,
-        baseH * scale
-    );
+    tint(255, alpha);
+    image(img, width / 2, height / 2, baseW * scale, baseH * scale);
     pop();
 }
 
 // ================================
-// 時間帯でメッセージを変える
+// 名言描画
 // ================================
 function drawTimeBasedMessage() {
-    // ===== フェードアニメーションの更新 =====
     updateQuoteAlpha();
 
-    // ==== 名言表示 ====
-    if (thanksText) {
-        // textBaseSizeに基づいた動的な配置
-        const padding = textBaseSize * 2.0;
-        const lineHeight = textBaseSize * 1.5; // 行間
-        const authorSize = textBaseSize * 0.75;
-        const authorSpacing = textBaseSize * 0.8; // 著者と名言の間隔
-
-        // 最大ボックスの高さを計算（キャンバスの50%を上限）
-        const maxBoxHeight = height * 0.45;
-        const quoteBoxWidth = width - padding * 2;
-
-        // テキストサイズ設定
-        textSize(textBaseSize);
-        textLeading(lineHeight);
-
-        // 名言のテキスト高さを推定
-        const estimatedQuoteHeight = textBaseSize * 3.5; // 見積もり高さ
-        const estimatedAuthorHeight = authorSize * 1.5;
-        const totalEstimatedHeight = estimatedQuoteHeight + authorSpacing + estimatedAuthorHeight;
-
-        // ボックスの実際の高さを決定（最大値を超えない）
-        const boxHeight = min(totalEstimatedHeight + textBaseSize, maxBoxHeight);
-
-        // 垂直中央配置用のY位置計算
-        const quoteBoxY = height * 0.25;
-        const contentTopY = quoteBoxY - boxHeight * 0.35;
-
-        if (DEBUG && frameCount === 1) {
-            console.log('[Draw] Quote rendering info:', {
-                textBaseSize: textBaseSize,
-                padding: padding,
-                lineHeight: lineHeight,
-                boxHeight: boxHeight,
-                maxBoxHeight: maxBoxHeight,
-                contentTopY: contentTopY,
-                textLength: thanksText.text.length,
-                authorLength: thanksText.author.length
-            });
-        }
-
-        // stroke(100, 255, 100, 200); // 常時表示
-        fill(0, quoteAlpha * 0.5);
-        // rect(padding, contentTopY, quoteBoxWidth+20, boxHeight+10);
-        // dropShadowRect(100, 100, 200, 200, 10);
-
-        // デバッグ表示：背景のボックスを描画（常に表示、フェードしない）
-        if (DEBUG) {
-            stroke(100, 255, 100, 200); // 常時表示
-            noFill();
-            rect(padding, contentTopY, quoteBoxWidth, boxHeight);
-
-            // テキスト情報を表示（常に表示、フェードしない）
-            fill(100, 255, 100, 255); // 常時表示
-            textAlign(LEFT);
-            textSize(textBaseSize * 0.5);
-            textLeading(textBaseSize * 1.2);
-            text(`Quote: "${thanksText.text.substring(0, 20)}..."`, textBaseSize * 0.5, textBaseSize);
-            text(`Author: ${thanksText.author}`, textBaseSize * 0.5, textBaseSize * 1.8);
-            text(`Alpha: ${Math.round(quoteAlpha)}`, textBaseSize * 0.5, textBaseSize * 2.6);
-            text(`Elapsed: ${Math.round((millis() - lastQuoteTime) / 100) / 10}s`, textBaseSize * 0.5, textBaseSize * 3.4);
-            textAlign(CENTER);
-        }
-
-        // フェードアルファを適用
-        noStroke();
-        fill(255, quoteAlpha);
-        textSize(textBaseSize);
-        textLeading(lineHeight);
-        text(thanksText.text, padding, contentTopY, quoteBoxWidth, boxHeight * 0.7);
-
-        // 著者
-        textSize(authorSize);
-        text("— " + thanksText.author, width / 2, contentTopY + boxHeight * 0.75);
-    } else {
-        // デバッグ：名言が読み込まれていない場合
+    if (!thanksText) {
         if (DEBUG) {
             fill(255, 100, 100);
-            textAlign(CENTER);
+            textAlign(CENTER, CENTER);
             textSize(textBaseSize);
             text("Quote not loaded", width / 2, height / 2);
         }
+        return;
     }
+
+    const padding = textBaseSize * 2.0;
+    const lineHeight = textBaseSize * 1.5;
+    const authorSize = textBaseSize * 0.75;
+    const authorSpacing = textBaseSize * 0.8;
+
+    const maxBoxHeight = height * 0.45;
+    const quoteBoxWidth = width - padding * 2;
+
+    textSize(textBaseSize);
+    textLeading(lineHeight);
+
+    const estimatedQuoteHeight = textBaseSize * 3.5;
+    const estimatedAuthorHeight = authorSize * 1.5;
+    const totalEstimatedHeight =
+        estimatedQuoteHeight + authorSpacing + estimatedAuthorHeight;
+
+    const boxHeight = min(totalEstimatedHeight + textBaseSize, maxBoxHeight);
+
+    const quoteBoxY = height * 0.25;
+    const contentTopY = quoteBoxY - boxHeight * 0.35;
+
+    if (DEBUG && frameCount === 1) {
+        console.log("[Draw] Quote rendering info:", {
+            textBaseSize,
+            padding,
+            lineHeight,
+            boxHeight,
+            maxBoxHeight,
+            contentTopY,
+            textLength: thanksText.text.length,
+            authorLength: thanksText.author.length,
+        });
+    }
+
+    // 背景（上ですでに全画面オーバーレイしているのでここは文字だけ）
+    noStroke();
+    fill(255, quoteAlpha);
+    textSize(textBaseSize);
+    textLeading(lineHeight);
+    text(thanksText.text, padding, contentTopY, quoteBoxWidth, boxHeight * 0.7);
+
+    textSize(authorSize);
+    text("— " + thanksText.author, width / 2, contentTopY + boxHeight * 0.75);
 }
 
 function windowResized() {
-    console.log('Window resized:', windowWidth, windowHeight);
+    console.log("Window resized:", windowWidth, windowHeight);
     resizeCanvas(windowWidth, windowHeight);
 }
