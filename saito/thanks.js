@@ -15,7 +15,7 @@ let transitionStart = 0;     // フェード開始時刻
 let inTransition = false;
 
 // 画像ロード管理
-const MAX_PARALLEL_LOADS = 3;   // 同時Ïロード数上限
+const MAX_PARALLEL_LOADS = 2;   // 同時Ïロード数上限
 let imageState = [];            // "not_started" | "loading" | "loaded" | "failed"
 let loadedIndices = [];         // 読み込み済みインデックス一覧
 
@@ -29,6 +29,8 @@ const quoteFadeDuration = 2000;
 const quoteGapDuration = 5000;  // ★ テキスト非表示の時間（ms）
 
 let textBaseSize = 0;
+
+let font = null;
 
 const DEBUG = new URLSearchParams(window.location.search).has("debug");
 console.log("[Quotes Sketch] Debug mode:", DEBUG);
@@ -81,6 +83,9 @@ function preloadImagesInBackground() {
 
 // 最初の1枚だけ確実に読み込んでからスタート（黒画面防止）
 function preload() {
+    // font = loadFont('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf');
+    font = 'NotoSansJP';
+
     initImageState();
     if (imageUrls.length > 0) {
         startImageLoad(0);
@@ -188,7 +193,8 @@ function setup() {
     imageMode(CENTER);
     textAlign(CENTER, CENTER);
     textWrap(CHAR);
-    textFont("Noto Sans JP");
+    // textFont("Noto Sans JP", "Noto Color Emoji");
+    textFont(font);
     textBaseSize = width * 0.04;
     frameRate(30); // 描画は30fps, 負荷が高ければ下げてもOK
 

@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <title>Thanks Slide</title>
   <style>
-    /* body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-    } */
-    /* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap'); */
     @font-face {
-      font-family: "Noto Sans JP";
-      src: url(../Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf) format("opentype");
-      font-style: normal;
+      font-family: 'NotoSansJP';
+      src: url('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf') format('truetype');
     }
+
+    @font-face {
+      font-family: 'NotoColorEmoji';
+      src: url('../fonts/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf') format('truetype');
+    }
+
+    /* body,
+    canvas {
+      font-family: 'NotoSansJP', 'NotoColorEmoji', sans-serif;
+    } */
 
     * {
       margin: 0;
       padding: 0;
     }
 
-    body {
+    body,
+    canvas {
       overflow: hidden;
       background: #000;
       color: #fff;
@@ -29,17 +34,20 @@
       width: 100vw;
 
       /* font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans", sans-serif; */
-      font-family: "Noto Sans JP", sans-serif;
+      /* font-family: "Noto Sans JP", sans-serif; */
+      font-family: 'NotoSansJP', 'NotoColorEmoji', sans-serif;
       font-optical-sizing: auto;
       /* font-weight: <weight>; */
       font-style: normal;
     }
   </style>
 </head>
+
 <body>
   <script src="../p5.js"></script>
   <script src="images.js"></script>
-  <script src="thanks.js"></script>
   <script src="appreciateData.js"></script>
+  <script src="thanks.js"></script>
 </body>
+
 </html>
