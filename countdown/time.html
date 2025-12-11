@@ -5,7 +5,12 @@
     <meta charset="utf-8">
     <title>Time Display</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
+        /* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap'); */
+
+        @font-face {
+            font-family: 'NotoSansJP';
+            src: url('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+        }
 
         * {
             margin: 0;
@@ -17,7 +22,7 @@
         body {
             overflow: hidden;
             background: #000;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans", sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "NotoSansJP", sans-serif;
             color: #fff;
             height: 100vh;
             width: 100vw;
@@ -47,7 +52,7 @@
             opacity: 0;
             transition: opacity 0.8s ease-in-out;
 
-            font-family: 'Noto Sans JP', sans-serif;
+            font-family: 'NotoSansJP', sans-serif;
             /* background: linear-gradient(90deg, #FF0000, #6AD074, #001CB0); */
             background: linear-gradient(100deg, #FF0000 33%, #6AD074 35%, #6AD074 58%, #001CB0 60%);
             -webkit-background-clip: text;

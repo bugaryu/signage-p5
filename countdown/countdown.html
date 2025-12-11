@@ -5,7 +5,12 @@
     <meta charset="utf-8">
     <title>MoN Takanawa: The Museum of Narratives - Countdown</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
+        /* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap'); */
+
+        @font-face {
+            font-family: 'NotoSansJP';
+            src: url('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+        }
 
         * {
             margin: 0;
@@ -19,7 +24,7 @@
             overflow: hidden;
             background: #000;
             /* font-family: "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, sans-serif; */
-            font-family: "Noto Sans JP", sans-serif;
+            font-family: "NotoSansJP", sans-serif;
             font-optical-sizing: auto;
             /* font-weight: <weight>; */
             font-style: normal;
@@ -125,7 +130,7 @@
             const dayMs = 1000 * 60 * 60 * 24;
             let daysLeft = Math.ceil(diffMs / dayMs);
             if (daysLeft < 0) daysLeft = 0;
-  
+
             baseCircleSize = Math.min(width, height) * 0.3;
             let velocity = 0.5;
             // 

@@ -5,7 +5,12 @@
   <meta charset="utf-8">
   <title>Time Quotes Display</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
+    /* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap'); */
+
+    @font-face {
+      font-family: 'NotoSansJP';
+      src: url('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+    }
 
     * {
       margin: 0;
@@ -20,7 +25,7 @@
       width: 100vw;
 
       /* font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans", sans-serif; */
-      font-family: "Noto Sans JP", sans-serif;
+      font-family: "NotoSansJP", sans-serif;
       font-optical-sizing: auto;
       /* font-weight: <weight>; */
       font-style: normal;

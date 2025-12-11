@@ -44,7 +44,7 @@ function pickTodayQuote() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    textFont("Noto Sans JP");
+    textFont("NotoSansJP");
     textAlign(CENTER, CENTER);
     textWrap(CHAR); // テキスト折り返しを有効化
     textBaseSize = width * 0.04; // 基本テキストサイズ
