@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Slide</title>
+  <style>
+    @font-face {
+      font-family: 'NotoSansJP';
+      src: url('../fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+    }
+
+    @font-face {
+      font-family: 'NotoColorEmoji';
+      src: url('../fonts/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf') format('truetype');
+    }
+
+    /* body,
+    canvas {
+      font-family: 'NotoSansJP', 'NotoColorEmoji', sans-serif;
+    } */
+
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body,
+    canvas {
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      width: 100vw;
+
+      /* font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans", sans-serif; */
+      font-family: 'NotoSansJP', 'NotoColorEmoji', sans-serif;
+      font-optical-sizing: auto;
+      /* font-weight: <weight>; */
+      font-style: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="../p5.js"></script>
+  <script src="images.js"></script>
+  <script src="messages.js"></script>
+  <script src="slide.js"></script>
+</body>
+
+</html>

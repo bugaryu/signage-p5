@@ -3,7 +3,8 @@ xrandr --output HDMI-1 --rotate right
 
 # ソースコピー
 scp -r ~/workspace/signage dietpi@192.168.10.84:~/workspace/
-rsync -av --delete --exclude='.git' ~/workspace/signage/ dietpi@192.168.10.84:~/workspace/signage/
+rsync -av --delete --exclude='.git' ~/workspace/signage/ dietpi@192.168.20.20:~/workspace/signage-p5/
+rsync -av --delete ~/workspace/signage/ dietpi@192.168.20.20:~/workspace/signage-p5/
 
 # サーバー立ち上げ
 http-server -p 8000 -a localhost

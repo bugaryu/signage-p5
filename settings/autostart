@@ -3,9 +3,4 @@
 #@pcmanfm --desktop --profile LXDE
 @xscreensaver -no-splash
 
-@xrandr --output HDMI-1 --rotate right
-
-@sleep 3
-@lxterminal
-@sleep 5
-@/home/dietpi/workspace/signage/kiosk.sh
+@/home/dietpi/workspace/signage-p5/kiosk.sh
