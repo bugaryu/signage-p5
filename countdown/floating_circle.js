@@ -7,9 +7,17 @@ let circleSize;
 let targetSize;
 let circleTime = 0;
 let baseCircleSize;
+const themeColors = [
+  [255, 0, 0],     // #FF0000 
+  [106, 208, 116], // #6AD074 
+  [0, 28, 176]     // #001CB0 
+];
+let colorChoiceA;
+let colorChoiceB;
+let colorChoiceC;
 
 function initFloatingCircle() {
-  frameRate(24);
+  frameRate(30);
   baseCircleSize = Math.min(width, height) * 0.3;
   circleX = width / 2;
   circleY = height / 2;
@@ -17,6 +25,9 @@ function initFloatingCircle() {
   targetY = height / 2;
   circleSize = baseCircleSize;
   targetSize = baseCircleSize;
+  colorChoiceA = themeColors[0];
+  colorChoiceB = themeColors[1];
+  colorChoiceC = themeColors[2];
 }
 
 function updateFloatingCircle() {
@@ -27,6 +38,10 @@ function updateFloatingCircle() {
     targetX = random(width * 0.2, width * 0.8);
     targetY = random(height * 0.2, height * 0.8);
     targetSize = random(baseCircleSize * 0.75, baseCircleSize * 1.75);
+
+    colorChoiceA = random(themeColors);
+    colorChoiceB = random(themeColors);
+    colorChoiceC = random(themeColors);
   }
 
   // Smooth movement toward target
@@ -42,13 +57,13 @@ function drawFloatingCircle() {
 
   // Draw optimized glow with fewer circles
   noStroke();
-  fill(255, 255, 255, 12);
-  ellipse(circleX + swayX, circleY + swayY, circleSize * 1.25);
-  
-  fill(255, 255, 255, 18);
-  ellipse(circleX + swayX, circleY + swayY, circleSize * 1.1);
-  
+  fill(colorChoiceC, 12);
+  ellipse(circleX + swayX * 0.5, circleY + swayY * 0.5, circleSize * 1.25);
+
+  fill(colorChoiceB, 18);
+  ellipse(circleX + swayX * 0.8, circleY + swayY * 0.8, circleSize * 1.1);
+
   // Draw main circle
-  fill(255, 255, 255, 25);
+  fill(colorChoiceA, 25);
   ellipse(circleX + swayX, circleY + swayY, circleSize);
 }
