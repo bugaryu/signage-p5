@@ -213,6 +213,8 @@ function setup() {
     nextIndex = currentIndex;
 }
 
+let _lastPost = 0;
+
 function draw() {
     background(0);
 
@@ -282,6 +284,11 @@ function draw() {
 
     // テキスト描画
     // drawTimeBasedMessage();
+
+    if (millis() - _lastPost >= 1000) {
+        _lastPost = millis();
+        window.parent?.postMessage({ type: 'VIEW_FPS', fps: frameRate() }, '*');
+    }
 }
 
 // ================================

@@ -18,6 +18,9 @@
         <div>Time: <span id="current-time">--:--:--</span></div>
         <div>Next Switch: <span id="next-switch">--:--</span></div>
         <div>Canvas Size: <span id="canvas-size">-- x --</span></div>
+        <!-- <div>FPS: <span id="fps">-- fps</span></div> -->
+        <div>UI FPS: <span id="ui-fps">--</span></div>
+        <div>View FPS: <span id="view-fps">--</span></div>
     </div>
 
     <script>
@@ -26,15 +29,19 @@
         // ====================================
         const SCHEDULE = [
             { hour: 9, minute: 0, second: 0, view: 'time' },
-            { hour: 10, minute: 0, second: 0, view: 'quotes' },
+            { hour: 10, minute: 0, second: 0, view: 'countdown' },
+            { hour: 11, minute: 0, second: 0, view: 'quotes' },
             { hour: 12, minute: 0, second: 0, view: 'countdown' },
-            { hour: 12, minute: 15, second: 0, view: 'slide' },
-            { hour: 12, minute: 30, second: 0, view: 'countdown' },
-            { hour: 12, minute: 45, second: 0, view: 'slide' },
             { hour: 13, minute: 0, second: 0, view: 'quotes' },
-            { hour: 15, minute: 0, second: 0, view: 'slide' },
+            { hour: 14, minute: 0, second: 0, view: 'slide' },
+            { hour: 14, minute: 30, second: 0, view: 'countdown' },
             { hour: 17, minute: 0, second: 0, view: 'quotes' },
-            { hour: 18, minute: 0, second: 0, view: 'time' },
+            { hour: 18, minute: 0, second: 0, view: 'countdown' },
+            { hour: 19, minute: 0, second: 0, view: 'time' },
+            { hour: 19, minute: 30, second: 0, view: 'countdown' },
+            { hour: 20, minute: 0, second: 0, view: 'time' },
+            { hour: 20, minute: 30, second: 0, view: 'countdown' },
+            { hour: 21, minute: 0, second: 0, view: 'time' },
         ]
 
         // ====================================
@@ -45,6 +52,9 @@
                 this.currentView = null;
                 this.lastCheckSecond = -1;
                 this.debugMode = false; // URLパラメータで ?debug=1 で有効化
+                this.frameCount = 0;
+                this.lastFpsUpdateTime = performance.now();
+                this.currentFps = 0;
             }
 
             init() {
@@ -57,6 +67,7 @@
                 console.log('[DisplayManager] Initialized', { debugMode: this.debugMode });
                 this.loadView();
                 this.startTimeMonitor();
+                this.startFpsMonitor();
             }
 
             loadView() {
@@ -139,6 +150,43 @@
 
                     this.updateStatus();
                 }, 500); // 500ms間隔で監視（秒単位の変更を素早く検出）
+            }
+
+            startFpsMonitor() {
+                // ----------------------------
+                // (A) 親ページ(UI)のFPS計測
+                // ----------------------------
+                let uiFrames = 0;
+                let uiLast = performance.now();
+
+                const tick = (t) => {
+                    uiFrames++;
+                    const elapsed = t - uiLast;
+
+                    if (elapsed >= 1000) {
+                        const uiFps = uiFrames * 1000 / elapsed;
+                        const el = document.getElementById('ui-fps');
+                        if (el) el.textContent = uiFps.toFixed(1);
+                        uiFrames = 0;
+                        uiLast = t;
+                    }
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+
+                // ----------------------------
+                // (B) iframe(view/p5)のFPS受信
+                // ----------------------------
+                window.addEventListener('message', (event) => {
+                    const data = event.data;
+                    if (!data) return;
+
+                    // 子側が {type:'VIEW_FPS', fps:xx.x} を送る想定
+                    if (data.type === 'VIEW_FPS' && typeof data.fps === 'number') {
+                        const el = document.getElementById('view-fps');
+                        if (el) el.textContent = data.fps.toFixed(1);
+                    }
+                });
             }
 
             updateStatus() {

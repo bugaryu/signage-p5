@@ -122,6 +122,7 @@
         function setup() {
             createCanvas(windowWidth, windowHeight);
             frameRate(30);
+            pixelDensity(1);
             updateCountdown();
 
             const now = new Date();
@@ -161,6 +162,8 @@
             resizeCanvas(windowWidth, windowHeight);
         }
 
+        let _lastPost = 0;
+
         function draw() {
             background(0);
             noStroke();
@@ -179,6 +182,11 @@
             // 背景を半透明で上書きして残像効果
             fill(0, 140);
             rect(0, 0, width, height);
+
+            if (millis() - _lastPost >= 1000) {
+                _lastPost = millis();
+                window.parent?.postMessage({ type: 'VIEW_FPS', fps: frameRate() }, '*');
+            }
         }
 
         function updateCountdown() {

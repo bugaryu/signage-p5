@@ -44,6 +44,7 @@ function pickTodayQuote() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    pixelDensity(1);
     textFont("NotoSansJP");
     textAlign(CENTER, CENTER);
     textWrap(CHAR); // テキスト折り返しを有効化
@@ -94,6 +95,8 @@ function updateQuoteAlpha() {
         fadingIn = true;
     }
 }
+
+let _lastPost = 0;
 
 function draw() {
     background(0); // 背景描画
@@ -184,6 +187,11 @@ function draw() {
             textSize(textBaseSize);
             text("Quote not loaded", width / 2, height / 2);
         }
+    }
+
+    if (millis() - _lastPost >= 1000) {
+        _lastPost = millis();
+        window.parent?.postMessage({ type: 'VIEW_FPS', fps: frameRate() }, '*');
     }
 }
 

@@ -115,6 +115,7 @@
             let w = container.clientWidth;
             let h = container.clientHeight;
             createCanvas(w, h);
+            pixelDensity(1);
             frameRate(30); // 30FPSに制限
 
             // フローティングサークルの初期化
@@ -123,6 +124,8 @@
             // 初回メッセージ表示
             showMessage();
         }
+
+        let _lastPost = 0;
 
         function draw() {
             background(0, 0, 0);
@@ -133,6 +136,11 @@
 
             // 毎フレーム時間帯をチェック
             // showMessage();
+
+            if (millis() - _lastPost >= 1000) {
+                _lastPost = millis();
+                window.parent?.postMessage({ type: 'VIEW_FPS', fps: frameRate() }, '*');
+            }
         }
 
         function windowResized() {
