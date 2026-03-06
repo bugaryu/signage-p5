@@ -3,8 +3,7 @@ xrandr --output HDMI-1 --rotate right
 
 # ソースコピー
 scp -r ~/workspace/signage dietpi@192.168.10.84:~/workspace/
-rsync -av --delete --exclude='.git' ~/workspace/signage/ dietpi@192.168.20.20:~/workspace/signage-p5/
-rsync -av --delete ~/workspace/signage/ dietpi@192.168.20.20:~/workspace/signage-p5/
+rsync -av --delete --exclude='.git' ~/workspace/signage/  mon@192.168.20.22:~/workspace/signage-p5
 
 # サーバー立ち上げ
 http-server -p 8000 -a localhost
@@ -13,7 +12,6 @@ http://localhost:8000/countdown/?debug=1
 
 # カウントダウン表示
 chromium --app="file://$HOME/workspace/signage/countdown/countdown.html"
-
 chromium --app="http://localhost:8000/workspace/signage/countdown/?debug"
 
 chromium \
@@ -36,5 +34,9 @@ sudo crontab -e
 01 20 * * * echo "kill executed..."
 
 ## 9:00 に kiosk を再起動（Chromium起動スクリプトを実行）
-#0 9 * * * /home/dietpi/workspace/signage/kiosk.sh
+# 0 9 * * * /home/dietpi/workspace/signage/kiosk.sh
 55 08 * * * sudo reboot
+
+## Startup
+mon@mon-player1:~ $ cat ~/.config/lxsession/LXDE-pi/autostart 
+@/home/mon/workspace/signage-p5/kiosk_raspi.sh
